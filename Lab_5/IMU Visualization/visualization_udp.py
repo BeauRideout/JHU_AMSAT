@@ -9,21 +9,21 @@ import math
 # Create a UDP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-# Bind the socket to the port
+# Host IP and port
 host, port = '0.0.0.0', 64000
 server_address = (host, port)
-
+# Bind the UDP Socket to the defind port
 sock.bind(server_address)
 print(f'Starting UDP server on {host} port {port}')
 
 scene.range=5
 toRad=2*np.pi/360
-toDeg=1/toRad
 scene.forward=vector(1,-1,0)
  
 scene.width=600
 scene.height=600
- 
+
+# Breadboard Model
 xarrow=arrow(lenght=2, shaftwidth=.1, color=color.red,axis=vector(1,0,0))
 yarrow=arrow(lenght=2, shaftwidth=.1, color=color.green,axis=vector(0,1,0))
 zarrow=arrow(lenght=4, shaftwidth=.1, color=color.blue,axis=vector(0,0,1))
@@ -39,17 +39,21 @@ myObj=compound([bBoard,nano])
 while True:
     # Wait for message
     message, address = sock.recvfrom(4027)
+    # Unpack message and convert to radians
     p, r, y = unpack('3f', message)
     pitch, roll, yaw = p * toRad, r * toRad, y * toRad
     print(f'pitch: {pitch}, roll: {roll}, Z: {yaw}')
 
     rate(220)
+    # Set pointing vectors
+    # https://toptechboy.com/9-axis-imu-lesson-20-vpython-visualization-of-roll-pitch-and-yaw/ 
     k=vector(cos(-yaw)*cos(pitch), sin(pitch), sin(-yaw)*cos(pitch))
     y=vector(0,1,0)
     s=cross(k,y)
     v=cross(s,k)
     vrot=v*cos(roll)+cross(k,v)*sin(roll)
 
+    # Move object to match IMU
     frontArrow.axis=k
     sideArrow.axis=cross(k,vrot)
     upArrow.axis=vrot

@@ -3,11 +3,11 @@ import paho.mqtt.client as mqtt
 import time
 import numpy as np
 
+#  Offest from center for each object
 offset_left = -5 
 offset_right = 5
 
 scene.forward=vector(1,-1,0)
-# scene.forward = vector(0,0,0)
 toRad=2*np.pi/360
 
 scene.width=800
@@ -33,10 +33,7 @@ panel2 = box(pos=vec(1.9,0,-3 + offset_right), length=0.2, height=4, width=4, co
 
 spacecraft = compound([body,panel1,panel2])
 
-# Origin
-box(pos=vector(0,0,0), length=0.25,width=0.25,height=0.25, color=color.orange)
-
-
+# MQTT Client Definition
 class vpClient:
     def __init__(self):
         mqttBroker = 'mqtt.eclipseprojects.io'
@@ -47,15 +44,19 @@ class vpClient:
         self.msg = ""
         self.client.on_message = self.on_message
 
+    # Message handler
     def on_message(self, client, userdata, message):
         self.msg = str(message.payload.decode("utf-8"))
 
-
+# Initilize MQTT client
 vpc = vpClient()
+
+# Initialize roll, pitch, yaw to zero 
 roll = 0
 yaw = 0
 pitch = 0
 while True:
+    # Split messages as they are received 
     vals = vpc.msg.split(",")
     if len(vals) == 3:
         pitch = float(vals[0]) * toRad
@@ -66,6 +67,7 @@ while True:
     rate(220)
 
     # Calculate vector pointing based on roll, pitch, and yaw values
+    # Helpuful links: https://toptechboy.com/9-axis-imu-lesson-20-vpython-visualization-of-roll-pitch-and-yaw/
     k=vector(cos(-yaw)*cos(pitch), sin(pitch), sin(-yaw)*cos(pitch))
     y=vector(0,1,0)
     s=cross(k,y)
